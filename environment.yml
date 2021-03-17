@@ -1,0 +1,25 @@
+name: drosha-gnn
+channels:
+- conda-forge
+dependencies:
+- python=3.8
+- jax
+- jaxlib
+- jupyter
+- jupyterlab
+- ipykernel
+- scipy
+- numpy
+- matplotlib
+- seaborn
+- pandas
+- pip
+- mamba
+- ipywidgets
+- networkx
+- pyprojroot
+- pyjanitor
+- pre-commit
+- black
+- pip:
+  - wandb
