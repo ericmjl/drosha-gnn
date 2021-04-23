@@ -89,5 +89,4 @@ Relative to NEW BEST: remove wa parameter from adjacency attention
 - Feed Forward: relu
 - RESULT: test loss = 2.65 on best epoch #102.
 
-
-
+NEW BEST RECORD!
