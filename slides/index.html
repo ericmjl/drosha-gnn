@@ -1,0 +1,97 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <title>Design and limits of graph models for RNA cleavage</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.1.0/reveal.esm.min.js" integrity="sha512-YXOOQUMhQAf8kwrBX4VFumtiTzohtUATKjai4FpfNbQgq/+LicQ8z6KVNeHvIo9qE7atMhsSYX3D0G4v3Hd+kg==" crossorigin="anonymous"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.1.0/reveal.min.css" integrity="sha512-zu0eodDPCBAZf1vnIgwZ6qchMBt1xqgGkS9vBjVmunoH8pU7cc9OQKBiSQCclpvqySupy9Y1pLZc87VB40G4Sw==" crossorigin="anonymous" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.1.0/reset.min.css" integrity="sha512-Mjxkx+r7O/OLQeKeIBCQ2yspG1P5muhAtv/J+p2/aPnSenciZWm5Wlnt+NOUNA4SHbnBIE/R2ic0ZBiCXdQNUg==" crossorigin="anonymous" />
+    <!-- Theme -->
+    <link rel="stylesheet" href="css/sunblind.css">
+
+    <!-- Customizations -->
+    <link rel="stylesheet" href="css/custom.css">
+
+    <!-- Theme used for syntax highlighted code -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.1.0/plugin/highlight/monokai.min.css" integrity="sha512-z8wQkuDRFwCBfoj7KOiu1MECaRVoXx6rZQWL21x0BsVVH7JkqCp1Otf39qve6CrCycOOL5o9vgfII5Smds23rg==" crossorigin="anonymous" />
+</head>
+
+<body>
+    <div class="reveal">
+        <div class="slides">
+            <section id="title">
+                <!-- <p class="grow">Slide 1</p> -->
+                <h1>Design and limits of graph attention networks for RNA cleavage</h1>
+                <h3>Eric J. Ma</h3>
+                <div class="container">
+                    <a href="https://ericmjl.github.io/" class="col">https://ericmjl.github.io/</a>
+                </div>
+            </section>
+            <section id="intro-to-myself">
+                <section>
+                    <h3>A bit about myself</h3>
+                </section>
+                <section id="current-role">
+                    <h3>Novartis Institutes for BioMedical Research</h3>
+                    <p>(2017-present)</p>
+                    <div class="container">
+                        <p class="col grow">14,000 chemical property models in parallel.</p>
+                        <p class="col grow">Machine-directed evolution with Bayesian esperiment design.</p>
+                        <p class="col grow">Mouse motion analysis with Autoregressive Gaussian HMMs.</p>
+                    </div>
+                    <br>
+                </section>
+                <section id="graduate-training">
+                    <h3>MIT Department of Biological Engineering</h3>
+                    <p>(2011-2017)</p>
+                    <a href="https://www.pnas.org/content/113/19/5335"><img src="images/thesis.png"></a>
+                </section>
+            </section>
+            <section id="overview-of-talk">
+                <section id="extension-of-paper">
+                    <h3>Today's talk is an extension of the following paper</h3>
+                    <a href="https://www.sciencedirect.com/science/article/abs/pii/S1097276520307358"><img src="images/molecular-cell.png"></a>
+                </section>
+                <section id="back-story">
+                    <h3>Drosha: a microRNA preprocessor</h3>
+                    <ul>
+                        <li class="fragment">Nuclear protein complex</li>
+                        <li class="fragment">Cleaves pre-miRNA into miRNA</li>
+                        <li class="fragment">miRNA plays a role in gene silencing</li>
+                    </ul>
+                </section>
+            </section>
+        </div>
+    </div>
+
+    <!-- <script src=" dist/reveal.js"></script> -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.1.0/reveal.js" integrity="sha512-LGXpHNR8kKb3liBoiowLefRfx9BahbZ0FWE8vfTOV3vU4jD/9SpoyZQ49rc7gBwSzbFTZAaLCsSkpujb6ic+Og==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.1.0/plugin/notes/notes.min.js" integrity="sha512-FYeeQscKqibmYKr0+nE2+fN5prBsFwgjsBVwkrA88O6mN2+ai6EvRkSi6txuhXlWsyK1MUfoV+94+q6HLouJSQ==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.1.0/plugin/markdown/markdown.min.js" integrity="sha512-eZZqO4ECmVvGhCt+6VZ7ian2bCu4S6yrjSFH9fXLY1zTokpAWsxAxQwM4x6+7G+G4ha5tFIe0jY0XjpBUqS49Q==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.1.0/plugin/highlight/highlight.min.js" integrity="sha512-NA5UCab7xDKQPXGsmIp8iEuId5BAKGPiqHZsZQcBuySfp1n3dZrwBDKpPNL23Db5upay1nULxU14JV1ggFOD2A==" crossorigin="anonymous"></script>
+    <script>
+        // More info about initialization & config:
+        // - https://revealjs.com/initialization/
+        // - https://revealjs.com/config/
+        Reveal.initialize({
+            // https://medium.com/myplanet-musings/building-a-responsive-reveal-js-theme-399179632cc6
+            width: "100%",
+            height: "100%",
+            margin: 0,
+            minScale: 1,
+            maxScale: 1,
+            // Learn about plugins: https://revealjs.com/plugins/
+            plugins: [RevealMarkdown, RevealHighlight, RevealNotes],
+        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js" integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf" crossorigin="anonymous"></script>
+</body>
+
+</html>
+</body>
+
+</html>

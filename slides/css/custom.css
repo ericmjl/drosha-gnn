@@ -1,0 +1,29 @@
+/* https://css-tricks.com/snippets/css/scale-on-hover-with-webkit-transition/ */
+
+.grow {
+    transition: all .2s ease-in-out;
+}
+
+.grow:hover {
+    transform: scale(1.1);
+}
+
+.bg-green {
+    background-color: green;
+}
+
+
+/*
+Taken from: https://stackoverflow.com/questions/30861845/how-to-use-two-column-layout-with-reveal-js
+*/
+
+.container {
+    display: flex;
+    max-width: 90%;
+    margin: auto;
+    justify-content: center;
+}
+
+.col {
+    flex: 1;
+}
