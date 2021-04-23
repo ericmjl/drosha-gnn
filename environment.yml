@@ -21,5 +21,6 @@ dependencies:
 - black
 - jax<=0.2.9
 - jaxlib<=0.1.61
+- typer
 - pip:
   - wandb
