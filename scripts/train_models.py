@@ -130,6 +130,9 @@ def train_gnn(cv_key, df, entropy, gnn_model, num_iters=200):
     train_test_data = X_train, X_test, y_train, y_test
     gnn_model.fit(X_train, y_train, num_iters=num_iters)
     gnn_model.set_best_params(X_test, y_test)
+    preds = gnn_model.predict(X_test)
+    score = mse(preds, y_test)
+    logger.info(f"Model performance (MSE): {score}")
     return gnn_model, train_test_data
 
 
@@ -187,28 +190,33 @@ def pickle_package(model_object, train_test_data, cv_key, dataset_name):
         pkl.dump(package, f)
 
 
-def main(dataset_name: str):
+def main():
     """Main function."""
 
     # Set up models to be trained
     master_key = random.PRNGKey(99)
     cv_keys = random.split(master_key, 5)
-    df, entropy = read_data(dataset_name)
-    for cv_key in cv_keys:
-        linear_model = LinearRegression()
-        rf_model = RandomForestRegressor(n_estimators=300, n_jobs=-1)
-        gnn_model = GATModel(cv_key)
+    dataset_names = sorted(base_datasets.keys())
+    for dataset_name in dataset_names:
+        logger.info(f"Fitting models for {dataset_name}")
+        df, entropy = read_data(dataset_name)
+        for cv_key in cv_keys:
+            linear_model = LinearRegression()
+            rf_model = RandomForestRegressor(n_estimators=300, n_jobs=-1)
+            gnn_model = GATModel(cv_key)
 
-        model_object, train_test_data = train_entropy(cv_key, df, entropy, linear_model)
-        pickle_package(model_object, train_test_data, cv_key, dataset_name)
+            model_object, train_test_data = train_entropy(
+                cv_key, df, entropy, linear_model
+            )
+            pickle_package(model_object, train_test_data, cv_key, dataset_name)
 
-        model_object, train_test_data = train_entropy(cv_key, df, entropy, rf_model)
-        pickle_package(model_object, train_test_data, cv_key, dataset_name)
+            model_object, train_test_data = train_entropy(cv_key, df, entropy, rf_model)
+            pickle_package(model_object, train_test_data, cv_key, dataset_name)
 
-        model_object, train_test_data = train_gnn(
-            cv_key, df, entropy, gnn_model, num_iters=200
-        )
-        pickle_package(model_object, train_test_data, cv_key, dataset_name)
+            model_object, train_test_data = train_gnn(
+                cv_key, df, entropy, gnn_model, num_iters=200
+            )
+            pickle_package(model_object, train_test_data, cv_key, dataset_name)
 
 
 if __name__ == "__main__":
