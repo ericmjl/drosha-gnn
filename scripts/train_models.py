@@ -37,6 +37,7 @@ model-{model_name}_key-{cv_key}_dataset-{dataset}.pkl
 from functools import partial
 
 import janitor
+from jax._src.random import PRNGKey
 import pandas as pd
 from drosha_gnn.data import (
     make_graph_matrices,
@@ -57,8 +58,8 @@ import typer
 
 base_datasets = {
     "biochem": "https://drosha-data.fly.dev/drosha/combined.csv?_stream=on&_sort=rowid&replicate__exact=1&_size=max",
-    "mir125": "https://drosha-data.fly.dev/drosha/combined.csv?_labels=on&_stream=on&replicate=2&basename=58&_size=max",
     "mir150": "https://drosha-data.fly.dev/drosha/combined.csv?_labels=on&_stream=on&replicate=2&basename=529&_size=max",
+    "mir16": "https://drosha-data.fly.dev/drosha/combined?_facet=replicate&replicate=2&_facet=basename&basename=123",
 }
 
 
@@ -73,12 +74,7 @@ def read_data(dataset: str):
     df = pd.read_csv(base_datasets[dataset]).set_index("rowid")
 
     logger.info("Reading entropy dataframe.")
-    entropy = (
-        pd.read_csv(entropy_url)
-        .set_index("rowid")
-        .select_columns(["shannon_*"])
-        .pipe(align_entropy)
-    )
+    entropy = pd.read_csv(entropy_url).set_index("rowid").select_columns(["shannon_*"])
     return df, entropy
 
 
@@ -122,7 +118,9 @@ class GATModel:
         return vmap(partial(self.model, self.best_params))(X)
 
 
-def train_gnn(cv_key, df, entropy, gnn_model, num_iters=200):
+def train_gnn(
+    cv_key: PRNGKey, df: pd.DataFrame, entropy: pd.DataFrame, gnn_model, num_iters=200
+):
     logger.info("Training GNN model.")
     model_and_params_key, data_key = random.split(cv_key)
     graph_matrices = construct_graphs(df, entropy)
@@ -136,10 +134,13 @@ def train_gnn(cv_key, df, entropy, gnn_model, num_iters=200):
     return gnn_model, train_test_data
 
 
-def train_entropy(cv_key, df, entropy, model_object):
+def train_entropy(
+    cv_key: PRNGKey, df: pd.DataFrame, entropy: pd.DataFrame, model_object
+):
     logger.info(f"Training a {model_object.__class__.__name__} model on entropy data.")
     _, data_key = random.split(cv_key)
 
+    entropy = entropy.pipe(align_entropy)
     logger.info(f"Data key value: {data_key}")
     X_train, X_test, y_train, y_test = split_entropy_data(data_key, df, entropy)
     train_test_data = X_train, X_test, y_train, y_test
