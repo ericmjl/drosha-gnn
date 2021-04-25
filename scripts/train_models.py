@@ -59,7 +59,7 @@ import typer
 base_datasets = {
     "biochem": "https://drosha-data.fly.dev/drosha/combined.csv?_stream=on&_sort=rowid&replicate__exact=1&_size=max",
     "mir150": "https://drosha-data.fly.dev/drosha/combined.csv?_labels=on&_stream=on&replicate=2&basename=529&_size=max",
-    "mir16": "https://drosha-data.fly.dev/drosha/combined?_facet=replicate&replicate=2&_facet=basename&basename=123",
+    "mir16": "https://drosha-data.fly.dev/drosha/combined.csv?_labels=on&_stream=on&replicate=2&basename=123&_size=max",
 }
 
 
@@ -81,45 +81,18 @@ def read_data(dataset: str):
 def construct_graphs(df, entropy):
     logger.info("Constructing graph matrices.")
     graph_matrices = dict()
+    logger.info(f"First 10 values of first row of entropy: {entropy.iloc[0][0:10]}")
+    logger.info(f"Last 10 values of first row of entropy: {entropy.iloc[0][-10:]}")
     for sample_idx in tqdm(df.index):
         graph_matrices[sample_idx] = make_graph_matrices(sample_idx, df, entropy)
     return graph_matrices
 
 
-class GATModel:
-    def __init__(self, key):
-        model, params = make_model_and_params(
-            key, AttentionEverywhereGNN, input_shape=(170, 2), num_nodes=170
-        )
-        self.key = key
-        self.model = model
-        self.initial_params = params
-        self.best_params = None
-        self.best_idx = None
-        self.loss_history = []
-        self.state_history = []
-        self.opt_get_params = None
-
-    def fit(self, X, y, num_iters=200):
-        losses_train, states, opt_get_params = fit(
-            self.model, self.initial_params, X, y, num_iters=num_iters
-        )
-        self.loss_history = losses_train
-        self.state_history = states
-        self.opt_get_params = opt_get_params
-
-    def set_best_params(self, X, y):
-        """X, y should be the test set, not the training set!"""
-        self.best_params, self.best_idx = best_params(
-            self.state_history, self.model, X, y, self.opt_get_params, mseloss
-        )
-
-    def predict(self, X):
-        return vmap(partial(self.model, self.best_params))(X)
+from drosha_gnn.models import GATModel
 
 
 def train_gnn(
-    cv_key: PRNGKey, df: pd.DataFrame, entropy: pd.DataFrame, gnn_model, num_iters=200
+    cv_key: PRNGKey, df: pd.DataFrame, entropy: pd.DataFrame, gnn_model, num_iters=300
 ):
     logger.info("Training GNN model.")
     model_and_params_key, data_key = random.split(cv_key)
@@ -135,14 +108,14 @@ def train_gnn(
 
 
 def train_entropy(
-    cv_key: PRNGKey, df: pd.DataFrame, entropy: pd.DataFrame, model_object
+    cv_key: PRNGKey, df: pd.DataFrame, entropy: pd.DataFrame, model_object: GATModel
 ):
     logger.info(f"Training a {model_object.__class__.__name__} model on entropy data.")
     _, data_key = random.split(cv_key)
 
-    entropy = entropy.pipe(align_entropy)
+    entropy_cleaned = entropy.pipe(align_entropy)
     logger.info(f"Data key value: {data_key}")
-    X_train, X_test, y_train, y_test = split_entropy_data(data_key, df, entropy)
+    X_train, X_test, y_train, y_test = split_entropy_data(data_key, df, entropy_cleaned)
     train_test_data = X_train, X_test, y_train, y_test
     model_object.fit(X_train, y_train)
     preds = model_object.predict(X_test)
@@ -215,7 +188,7 @@ def main():
             pickle_package(model_object, train_test_data, cv_key, dataset_name)
 
             model_object, train_test_data = train_gnn(
-                cv_key, df, entropy, gnn_model, num_iters=200
+                cv_key, df, entropy, gnn_model, num_iters=300
             )
             pickle_package(model_object, train_test_data, cv_key, dataset_name)
 
