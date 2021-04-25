@@ -1,5 +1,7 @@
+from functools import partial
 from typing import Callable
 
+from jax import vmap
 from jax.experimental import stax
 
 from drosha_gnn.layers import (
@@ -11,6 +13,7 @@ from drosha_gnn.layers import (
     NodeFeatureExtractor,
     RnaGraphEmbedding,
 )
+from drosha_gnn.training import best_params, fit, mseloss
 
 
 def AttentionEverywhereGNN(num_nodes: int):
@@ -63,11 +66,6 @@ def make_model_and_params(key, Model: Callable, input_shape: tuple, **model_kwar
     init_fun, model = Model(**model_kwargs)
     _, params = init_fun(key, input_shape=input_shape)
     return model, params
-
-
-from drosha_gnn.training import fit, best_params, mseloss
-from jax import vmap
-from functools import partial
 
 
 class GATModel:

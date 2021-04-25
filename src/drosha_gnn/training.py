@@ -1,7 +1,13 @@
-from jax import random, numpy as np
+from typing import Callable
+
 import pandas as pd
+from jax import jit
+from jax import numpy as np
+from jax import random, value_and_grad, vmap
+from jax.experimental.optimizers import adam
 from jax.tree_util import Partial
 from loguru import logger
+from tqdm.auto import tqdm
 
 
 def train_test_split(rng: random.PRNGKey, df: pd.DataFrame, train_fraction=0.7):
@@ -16,10 +22,6 @@ def train_test_split(rng: random.PRNGKey, df: pd.DataFrame, train_fraction=0.7):
     return train_idxs, test_idxs
 
 
-from jax import value_and_grad, vmap
-from jax import jit
-
-
 def mse(y_true: np.array, y_pred: np.array):
     return np.mean(np.power(y_true.squeeze() - y_pred.squeeze(), 2))
 
@@ -32,13 +34,6 @@ def mseloss(params, model, X, y):
 
 
 dmseloss = jit(value_and_grad(mseloss))
-
-from jax.experimental.optimizers import adam
-from jax import jit
-from drosha_gnn.training import dmseloss, mseloss
-from typing import Callable
-from jax.tree_util import Partial
-from tqdm.auto import tqdm
 
 
 def step(
@@ -114,5 +109,6 @@ def best_params(states, model, X, y, get_params, lossfunc):
     """Return the best parameter (that minimizes a loss) from training run."""
     test_losses = states_losses(states, model, X, y, get_params, lossfunc)
     best_idx = np.argmin(test_losses)
+    logger.info(f"Best parameters found at training epoch {best_idx}")
     best_param = get_params(states[best_idx])
     return best_param, best_idx

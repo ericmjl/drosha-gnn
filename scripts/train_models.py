@@ -45,9 +45,8 @@ from drosha_gnn.data import (
     split_graph_data,
     align_entropy,
 )
-from drosha_gnn.models import AttentionEverywhereGNN, make_model_and_params
-from drosha_gnn.training import best_params, fit, mse, mseloss
-from jax import random, vmap
+from drosha_gnn.training import mse
+from jax import random
 from loguru import logger
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LinearRegression
@@ -55,11 +54,16 @@ from tqdm.auto import tqdm
 import pickle as pkl
 from pyprojroot import here
 import typer
+from drosha_gnn.models import GATModel
+
+
+app = typer.Typer()
 
 base_datasets = {
     "biochem": "https://drosha-data.fly.dev/drosha/combined.csv?_stream=on&_sort=rowid&replicate__exact=1&_size=max",
     "mir150": "https://drosha-data.fly.dev/drosha/combined.csv?_labels=on&_stream=on&replicate=2&basename=529&_size=max",
     "mir16": "https://drosha-data.fly.dev/drosha/combined.csv?_labels=on&_stream=on&replicate=2&basename=123&_size=max",
+    "mir190": "https://drosha-data.fly.dev/drosha/combined.csv?_labels=on&_stream=on&replicate=2&basename=170&_sort_desc=frac_avg&_size=max",
 }
 
 
@@ -86,9 +90,6 @@ def construct_graphs(df, entropy):
     for sample_idx in tqdm(df.index):
         graph_matrices[sample_idx] = make_graph_matrices(sample_idx, df, entropy)
     return graph_matrices
-
-
-from drosha_gnn.models import GATModel
 
 
 def train_gnn(
@@ -164,13 +165,24 @@ def pickle_package(model_object, train_test_data, cv_key, dataset_name):
         pkl.dump(package, f)
 
 
-def main():
+@app.command()
+def main(
+    dataset_name: str = typer.Option(
+        "all", help="The name of the dataset to fit model on. Defaults to 'all'."
+    ),
+    num_gnn_iters: int = typer.Option(
+        default=300, help="Number of iterations to train GNN model"
+    ),
+):
     """Main function."""
+
+    dataset_names = [dataset_name]
+    if dataset_name == "all":
+        dataset_names = sorted(base_datasets.keys())
 
     # Set up models to be trained
     master_key = random.PRNGKey(99)
     cv_keys = random.split(master_key, 5)
-    dataset_names = sorted(base_datasets.keys())
     for dataset_name in dataset_names:
         logger.info(f"Fitting models for {dataset_name}")
         df, entropy = read_data(dataset_name)
@@ -188,10 +200,10 @@ def main():
             pickle_package(model_object, train_test_data, cv_key, dataset_name)
 
             model_object, train_test_data = train_gnn(
-                cv_key, df, entropy, gnn_model, num_iters=300
+                cv_key, df, entropy, gnn_model, num_iters=num_gnn_iters
             )
             pickle_package(model_object, train_test_data, cv_key, dataset_name)
 
 
 if __name__ == "__main__":
-    typer.run(main)
+    app()
