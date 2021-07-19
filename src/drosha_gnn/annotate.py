@@ -1,6 +1,7 @@
 """Annotate graph datastructure with metadata."""
-import networkx as nx 
-import numpy as np 
+import networkx as nx
+import numpy as np
+
 
 def node_nucleotide(G: nx.Graph, sequence: str):
     """Annotate nucleotide and nucleotide index on every node."""
